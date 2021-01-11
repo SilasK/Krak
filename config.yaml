@@ -1,0 +1,5 @@
+
+taxonomy: ""
+
+fasta_extension: '.fasta.gz'
+genome_folder: /home/kiesers/s/HumanUnifiedCatalog/gff/fasta
