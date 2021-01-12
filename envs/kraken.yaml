@@ -3,5 +3,6 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - kraken2=2.0
+  - kraken2>=2.0
   - flextaxd>=0.3.2
+  - braken>=2.6
