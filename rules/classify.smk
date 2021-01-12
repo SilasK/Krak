@@ -20,7 +20,7 @@ rule kraken_single:
     conda:
         "../envs/kraken.yaml"
     params:
-        extra: config.get("kraken_run_extra","")
+        extra= config.get("kraken_run_extra","")
     resources:
         mem=config['kraken_mem'],
         time= config['kraken_time']
@@ -52,7 +52,7 @@ rule kraken_paired:
     conda:
         "../envs/kraken.yaml"
     params:
-        extra: config.get("kraken_run_extra","")
+        extra= config.get("kraken_run_extra","")
     resources:
         mem=config['kraken_mem'],
         time= config['kraken_time']

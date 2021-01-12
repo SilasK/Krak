@@ -8,8 +8,6 @@ sys.path.append(os.path.join(snakemake_folder,"scripts"))
 
 kraken_db_files=["hash.k2d", "opts.k2d","taxo.k2d"]
 
-include: "rules/build.smk"
-include: "rules/classify.smk"
 
 
 
@@ -34,9 +32,5 @@ def get_kraken_db_path(wildcards):
 
     return kraken_db_folder
 
-# import os
-# import re
-# import sys
-# from glob import glob
-# from snakemake.utils import report
-# import warnings
+include: "rules/build.smk"
+include: "rules/classify.smk"

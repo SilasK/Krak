@@ -6,7 +6,7 @@ rule build:
         expand("{folder}/{file}",
                folder=config['build_db_name'],
                file= kraken_db_files),
-        expand("{db_name}/braken/{readlength}",
+        expand("{db_name}/braken/{readlength}_done",
                  db_name= config['build_db_name'],
                  readlength=[50,100,150]
                  )
@@ -49,7 +49,7 @@ rule build_kraken_db:
         names= "build/flextaxd/names.dmp",
         genome_folder = config['genome_folder']
     output:
-        expand("{db_name}/{file}", file=kraken_db_files)
+        expand("{{db_name}}/{file}", file=kraken_db_files)
     params:
         taxonomy= "build/flextaxd",
         kraken_path= lambda wc: os.path.abspath(wc.db_name)
@@ -83,7 +83,7 @@ rule build_kraken_db:
 
 
 wildcard_constraints:
-    readlength: "d+"
+    readlength="\d+"
 
 rule build_braken_db:
     input:
@@ -91,11 +91,15 @@ rule build_braken_db:
     output:
         touch("{db_name}/braken/{readlength}_done")
     threads:
-        config['threads']
+        config['braken_threads']
+    conda:
+        "../envs/kraken.yaml"
     log:
         "log/build/braken_db/{db_name}_{readlength}.log"
+    benchmark:
+        "log/benchmark/build/braken_db/{db_name}_{readlength}.tsv"
     shell:
         "bracken-build "
         " -t {threads} "
         " -d {wildcards.db_name} "
-        " -l {readlength}"
+        " -l {wildcards.readlength}"

@@ -3,6 +3,7 @@ kraken_mem : 512
 kraken_threads : 32
 kraken_time: 12
 build_time: 1
+braken_threads: 10
 
 ### Build
 build_db_name : "kraken_db"
@@ -13,6 +14,9 @@ genome_folder: /home/kiesers/s/HumanUnifiedCatalog/gff/fasta
 
 
 #### Mpping
+
+
+sample_table: ""
 # store one or several name : path
 kraken_db:
   kraken_db : kraken_db
