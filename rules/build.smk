@@ -6,7 +6,7 @@ rule build:
         expand("{folder}/{file}",
                folder=config['build_db_name'],
                file= kraken_db_files),
-        expand("{db_name}/braken/{readlength}_done",
+        expand("{db_name}/bracken/{readlength}_done",
                  db_name= config['build_db_name'],
                  readlength=[50,100,150]
                  )
@@ -85,19 +85,19 @@ rule build_kraken_db:
 wildcard_constraints:
     readlength="\d+"
 
-rule build_braken_db:
+rule build_bracken_db:
     input:
         rules.build_kraken_db.output
     output:
-        touch("{db_name}/braken/{readlength}_done")
+        touch("{db_name}/bracken/{readlength}_done")
     threads:
-        config['braken_threads']
+        config['bracken_threads']
     conda:
         "../envs/kraken.yaml"
     log:
-        "log/build/braken_db/{db_name}_{readlength}.log"
+        "log/build/bracken_db/{db_name}_{readlength}.log"
     benchmark:
-        "log/benchmark/build/braken_db/{db_name}_{readlength}.tsv"
+        "log/benchmark/build/bracken_db/{db_name}_{readlength}.tsv"
     shell:
         "bracken-build "
         " -t {threads} "
