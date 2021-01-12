@@ -59,7 +59,7 @@ rule build_kraken_db:
         config['kraken_threads']
     resources:
         mem=config['kraken_mem'],
-        time=config['kraken_time']
+        time=config['build_time']
     benchmark:
         "log/benchmark/build/build_kraken_db/{db_name}.tsv"
     log:

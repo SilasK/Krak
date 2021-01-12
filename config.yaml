@@ -2,6 +2,7 @@
 kraken_mem : 512
 kraken_threads : 32
 kraken_time: 12
+build_time: 1
 
 ### Build
 build_db_name : "kraken_db"
