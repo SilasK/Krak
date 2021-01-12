@@ -16,12 +16,11 @@ def get_kraken_db_path(wildcards):
         get the path from config['kraken_db'][wildcards.db_name]
         and verifies if all the files for a correct kraken2 db are there
     """
-
-    key= wildcards.db_name
+    db_name= wildcards.db_name
     assert 'kraken_db' in config, 'Expect a directory named "kraken_db" in the config file'
     assert db_name in config['kraken_db'], f'The name "{db_name}" is not in the config file under "krakendb"'
 
-    kraken_db_folder = config['kraken_db'][key]
+    kraken_db_folder = config['kraken_db'][db_name]
 
     if not os.path.exists(kraken_db_folder):
         raise IOError(f"{kraken_db_folder} doesn't exist")
