@@ -1,4 +1,4 @@
-include: "sample_table.smk"
+#include: "sample_table.smk"
 
 
 
@@ -6,17 +6,18 @@ include: "sample_table.smk"
 
 
 
-rule kraken_single:
+#if paired otherwise change headers and --paired ioption.
+rule kraken:
     input:
-        reads=lambda wc: get_files_from_sampleTable(wc.sample,['Reads_QC_se']),
+        reads=lambda wc: get_files_from_sampleTable(wc.sample,['Reads_QC_R1','Reads_QC_R2']),
         db= get_kraken_db_path
     output:
-        kraken="kraken_results/{db_name}/kraken_results/{sample}_se.kraken",
-        report="kraken_results/{db_name}/kraken_reports/{sample}_se.txt"
+        #kraken="kraken_results/{db_name}/kraken_results/{sample}.kraken",
+        report= temp("kraken_results/{db_name}/reports/{sample}.txt")
     log:
-        "logs/run/{db_name}/{sample}_se.log"
+        "logs/run/{db_name}/{sample}.log"
     benchmark:
-        "logs/benchmark/run/{db_name}/{sample}_se.log"
+        "logs/benchmark/run/{db_name}/{sample}.log"
     conda:
         "../envs/kraken.yaml"
     params:
@@ -31,48 +32,58 @@ rule kraken_single:
             --db {input.db} \
             {params.extra} \
             --threads {threads} \
-            --output {output.kraken} \
+            --output - \
             --report {output.report} \
+            --paired \
             {input.reads} \
             2> >(tee {log})
         """
 
-rule kraken_paired:
+
+
+rule braken:
     input:
-        R1=lambda wc: get_files_from_sampleTable(wc.sample,['Reads_QC_R1']),
-        R2=lambda wc: get_files_from_sampleTable(wc.sample,['Reads_QC_R2']),
+        "kraken_results/{db_name}/reports/{sample}.txt",
         db= get_kraken_db_path
     output:
-        kraken="kraken_results/{db_name}/kraken_results/{sample}_pe.kraken",
-        report="kraken_results/{db_name}/kraken_reports/{sample}_pe.txt"
+        "kraken_results/{db_name}/braken_extimation/{sample}.txt"
+    params:
+        readlength=50,
+        level= 'S1',
+        threshold =0 # number of reads required PRIOR to abundance estimation to perform reestimation (default: 0)
     log:
-        "logs/run/{db_name}/{sample}_pe.log"
+        "logs/braken/{db_name}/{sample}.log"
     benchmark:
-        "logs/benchmark/run/{db_name}/{sample}_pe.log"
+        "logs/benchmark/braken/{db_name}/{sample}.log"
     conda:
         "../envs/kraken.yaml"
-    params:
-        extra= config.get("kraken_run_extra","")
-    resources:
-        mem=config['kraken_mem'],
-        time= config['kraken_time']
-    threads:  config['kraken_threads']
+    threads:  1
     shell:
-        """
-            kraken2 \
-            --db {input.db} \
-            {params.extra} \
-            --threads {threads} \
-            --output {output.kraken} \
-            --report {output.report} \
-            --paired \
-            {input.R1} {input.R2} \
-            2> >(tee {log})
-        """
+        "bracken "
+        " -d {input.db} "
+        " -i {input[0]} "
+        " -o {output} "
+        #" -w {output.report} "
+        " -r {params.readlength} "
+        " -l {params.level} "
+        " -t {params.threshold} "
+        " 2> >(tee {log}) "
 
 
+rule combine_braken:
+    input:
+        expand("kraken_results/{{db_name}}/braken_extimation/{sample}.txt",
+               sample = get_all_from_sampletable()
+               )
 
-
+# Usage: bracken -d MY_DB -i INPUT -o OUTPUT -w OUTREPORT -r READ_LEN -l LEVEL -t THRESHOLD
+#   MY_DB          location of Kraken database
+#   INPUT          Kraken REPORT file to use for abundance estimation
+#   OUTPUT         file name for Bracken default output
+#   OUTREPORT      New Kraken REPORT output file with Bracken read estimates
+#   READ_LEN       read length to get all classifications for (default: 100)
+#   LEVEL          level to estimate abundance at [options: D,P,C,O,F,G,S] (default: S)
+#   THRESHOLD      number of reads required PRIOR to abundance estimation to perform reestimation (default: 0)
 
 
 

@@ -3,11 +3,12 @@ kraken_mem : 512
 kraken_threads : 32
 kraken_time: 12
 build_time: 1
-bracken_threads: 10
+braken_threads: 10
+braken_mem: 100
 
 ### Build
 build_db_name : "kraken_db"
-taxonomy: ""
+taxonomy: "green_genes_taxonomy.tsv"
 fasta_extension: '.fasta.gz'
 genome_folder: /home/kiesers/s/HumanUnifiedCatalog/gff/fasta
 
@@ -16,7 +17,7 @@ genome_folder: /home/kiesers/s/HumanUnifiedCatalog/gff/fasta
 #### Mpping
 
 
-sample_table: ""
+sample_table: "samples.tsv"
 # store one or several name : path
 kraken_db:
   kraken_db : kraken_db

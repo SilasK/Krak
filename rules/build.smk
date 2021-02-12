@@ -6,7 +6,7 @@ rule build:
         expand("{folder}/{file}",
                folder=config['build_db_name'],
                file= kraken_db_files),
-        expand("{db_name}/bracken/{readlength}_done",
+        expand("{db_name}/database{readlength}mers.kraken",
                  db_name= config['build_db_name'],
                  readlength=[50,100,150]
                  )
@@ -16,15 +16,15 @@ rule flextaxd_createdb:
     input:
         config['taxonomy']
     output:
-        db="build/flextaxd/flextaxd.ftd",
-        nodes= "build/flextaxd/nodes.dmp",
-        names= "build/flextaxd/names.dmp"
+        db="{db_name}/flextaxd/flextaxd.ftd",
+        nodes= "{db_name}/flextaxd/nodes.dmp",
+        names= "{db_name}/flextaxd/names.dmp"
     params:
-        out_path= "build/flextaxd/"
+        out_path= lambda wc,output: os.path.dirname(output[0])
     conda:
         "../envs/kraken.yaml"
     log:
-        "log/build/flextaxd_create_db.log"
+        "log/build/flextaxd/{db_name}.log"
     shell:
         "flextaxd "
         "--taxonomy_file {input} "
@@ -44,14 +44,15 @@ rule flextaxd_createdb:
 
 rule build_kraken_db:
     input:
-        db="build/flextaxd/flextaxd.ftd",
-        nodes= "build/flextaxd/nodes.dmp",
-        names= "build/flextaxd/names.dmp",
+        db="{db_name}/flextaxd/flextaxd.ftd",
+        nodes= "{db_name}/flextaxd/nodes.dmp",
+        names= "{db_name}/flextaxd/names.dmp",
         genome_folder = config['genome_folder']
     output:
-        expand("{{db_name}}/{file}", file=kraken_db_files)
+        krakendb=expand("{{db_name}}/{file}", file=kraken_db_files),
+        seqid2taxid= "{db_name}/seqid2taxid.map.gz"
     params:
-        taxonomy= "build/flextaxd",
+        taxonomy= lambda wc,input: os.path.dirname(input.db),
         kraken_path= lambda wc: os.path.abspath(wc.db_name)
     conda:
         "../envs/kraken.yaml"
@@ -68,6 +69,7 @@ rule build_kraken_db:
         "flextaxd-create "
         "--db_name {params.kraken_path} "
         "--database {input.db} "
+        "--keep " #keep intermediary folder to create braken db
         "-o {params.taxonomy} "
         " --genomes_path {input.genome_folder} "
         "-p {threads} "
@@ -78,8 +80,14 @@ rule build_kraken_db:
 #bracken https://ccb.jhu.edu/software/bracken/index.shtml?t=manual
 
 
-
-
+localrules: unzip_seqmap
+rule unzip_seqmap:
+    input:
+        "{db_name}/seqid2taxid.map.gz"
+    output:
+        temp("{db_name}/seqid2taxid.map")
+    shell:
+        "gunzip -c {input} > {output}"
 
 
 wildcard_constraints:
@@ -87,11 +95,16 @@ wildcard_constraints:
 
 rule build_bracken_db:
     input:
-        rules.build_kraken_db.output
+        rules.build_kraken_db.output.krakendb,
+        "{db_name}/seqid2taxid.map"
     output:
-        touch("{db_name}/bracken/{readlength}_done")
+        "{db_name}/database{readlength}mers.kraken",
+        "{db_name}/database{readlength}mers.kmer_distrib"
     threads:
-        config['bracken_threads']
+        config['braken_threads']
+    resources:
+        mem=config['braken_mem'],
+        time=config['build_time']
     conda:
         "../envs/kraken.yaml"
     log:
@@ -103,3 +116,4 @@ rule build_bracken_db:
         " -t {threads} "
         " -d {wildcards.db_name} "
         " -l {wildcards.readlength}"
+        " &> {log}"

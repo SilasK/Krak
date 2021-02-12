@@ -1,4 +1,3 @@
-import pandas as pd
 SAMPLEFILE_HEADERS=[]
 
 
@@ -15,15 +14,19 @@ def validate_sample_table(sampleTable):
         logging.error( f"Expect Samples to be unique. Found {duplicated_samples} more than once")
         exit(1)
 
-
+sampleTable = None
 def load_sample_table(sample_table='samples.tsv'):
+    """ Load sample 
+    """
 
+
+    import pandas as pd
     sampleTable = pd.read_csv(sample_table,index_col=0,sep='\t')
     validate_sample_table(sampleTable)
     return sampleTable
 
 
-sampleTable= load_sample_table(config.get('sample_table','samples.tsv'))
+
 
 SAMPLES = sampleTable.index.values
 SKIP_QC=False
@@ -78,6 +81,11 @@ def get_files_from_sampleTable(sample,Headers):
         It checks various possibilities for errors and throws either a
         FileNotInSampleTableException or a IOError, when something went really wrong.
     """
+
+
+    if sampleTable is None:
+        sampleTable= load_sample_table(config.get('sample_table','samples.tsv'))
+
 
     if not (sample in sampleTable.index):
         raise FileNotInSampleTableException(f"Sample name {sample} is not in sampleTable")
