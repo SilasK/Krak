@@ -1,52 +1,96 @@
-#include: "sample_table.smk"
+include: "workflow_scripts.smk"
+include: "sample_table.smk"
+
+rule all:
+    input:
+        "classify_{db_name}"
 
 
+rule load_db:
+    input:
+        get_kraken_db_files
+    output:
+        temp(directory("/dev/shm/{db_name}"))
+    resources:
+        mem_mb= 0,  # resources are summed together for the whole group
+        time= 0
+    group:
+        "kraken"
+    threads:
+        0
+    shell:
+        "mkdir {output} 2> {log} ; "
+        " cp -v {input} {output} 2> {log} "
 
 
 
 
 
 #if paired otherwise change headers and --paired ioption.
-rule kraken:
+rule kraken_sample:
     input:
-        reads=lambda wc: get_files_from_sampleTable(wc.sample,['Reads_QC_R1','Reads_QC_R2']),
+        reads=get_quality_controlled_reads , # returns paired end or not
         db= get_kraken_db_path
     output:
         #kraken="kraken_results/{db_name}/kraken_results/{sample}.kraken",
-        report= temp("kraken_results/{db_name}/reports/{sample}.txt")
+        report= "kraken_results/{db_name}/reports/{sample}.txt"
     log:
         "logs/run/{db_name}/{sample}.log"
     benchmark:
-        "logs/benchmark/run/{db_name}/{sample}.log"
+        "logs/benchmark/kraken/{db_name}/samples/{sample}.tsv"
     conda:
         "../envs/kraken.yaml"
     params:
-        extra= config.get("kraken_run_extra","")
+        extra= config.get("kraken_run_extra",""),
+        paired = '--paired' if config.get('paired_reads',True) else "" ,
+        ramdisk = "--memory-mapping" if config['use_ramdisk'] else "",
     resources:
-        mem=config['kraken_mem'],
-        time= config['kraken_time']
-    threads:  config['kraken_threads']
+        mem_mb= 0,  # resources are summed together for the whole group
+        time= 5
+    group:
+        "kraken"
+    threads:
+        0 #config['kraken_threads']
     shell:
         """
             kraken2 \
             --db {input.db} \
             {params.extra} \
-            --threads {threads} \
+            --threads {config[kraken_threads]} \
             --output - \
             --report {output.report} \
-            --paired \
+            {params.paired} \
+            {params.ramdisk} \
             {input.reads} \
             2> >(tee {log})
         """
 
+# rule to gather all kreken on samples
+rule all_kraken:
+    input:
+        expand("kraken_results/{{db_name}}/reports/{sample}.txt",
+               sample = get_all_from_sampletable()
+               )
+    output:
+        temp(touch("finished_kraken_{db_name}"))
+    resources:
+        mem_mb= 0,  # resources are summed together for the whole group
+        time= 0
+    group:
+        "kraken"
+    threads:
+        config['kraken_threads']
+    benchmark:
+        "logs/benchmark/kraken/{db_name}.tsv"
 
 
 rule braken:
     input:
         "kraken_results/{db_name}/reports/{sample}.txt",
-        db= get_kraken_db_path
+        db= get_kraken_db_path,
+        flag= rules.all_kraken.output #finish all kraken before starting braken
     output:
-        "kraken_results/{db_name}/braken_extimation/{sample}.txt"
+        "kraken_results/{db_name}/braken_estimation/{sample}.txt"
     params:
         readlength=50,
         level= 'S1',
@@ -54,7 +98,7 @@ rule braken:
     log:
         "logs/braken/{db_name}/{sample}.log"
     benchmark:
-        "logs/benchmark/braken/{db_name}/{sample}.log"
+        "logs/benchmark/braken/{db_name}/{sample}.tsv"
     conda:
         "../envs/kraken.yaml"
     threads:  1
@@ -72,9 +116,11 @@ rule braken:
 
 rule combine_braken:
     input:
-        expand("kraken_results/{{db_name}}/braken_extimation/{sample}.txt",
+        expand("kraken_results/{{db_name}}/braken_estimation/{sample}.txt",
                sample = get_all_from_sampletable()
                )
+    output:
+        touch("classify_{db_name}")
 
 # Usage: bracken -d MY_DB -i INPUT -o OUTPUT -w OUTREPORT -r READ_LEN -l LEVEL -t THRESHOLD
 #   MY_DB          location of Kraken database

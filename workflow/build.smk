@@ -1,3 +1,6 @@
+include: "workflow_scripts.smk"
+
+
 
 localrules: flextaxd_createdb, build
 
@@ -59,7 +62,7 @@ rule build_kraken_db:
     threads:
         config['kraken_threads']
     resources:
-        mem=config['kraken_mem'],
+        mem_mb=config['kraken_mem'],
         time=config['build_time']
     benchmark:
         "log/benchmark/build/build_kraken_db/{db_name}.tsv"
@@ -103,7 +106,7 @@ rule build_bracken_db:
     threads:
         config['braken_threads']
     resources:
-        mem=config['braken_mem'],
+        mem_mb=config['braken_mem'],
         time=config['build_time']
     conda:
         "../envs/kraken.yaml"
