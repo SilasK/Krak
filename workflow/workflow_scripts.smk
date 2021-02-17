@@ -37,7 +37,7 @@ def get_kraken_db_files(wildcards):
                file=kraken_db_files
                )
 
-def calculate_kraken_memory(wildcards, overhead=1000):
+def calculate_kraken_memory(wildcards, overhead=7000):
     "Calculate db size of kraken db. in MB "
     "depending on wildcard 'db_name' "
 

@@ -6,31 +6,12 @@ rule all:
         "classify_{db_name}"
 
 
-rule load_db:
-    input:
-        get_kraken_db_files
-    output:
-        temp(directory("/dev/shm/{db_name}"))
-    resources:
-        mem_mb= 0,  # resources are summed together for the whole group
-        time= 0
-    group:
-        "kraken"
-    threads:
-        0
-    shell:
-        "mkdir {output} 2> {log} ; "
-        " cp -v {input} {output} 2> {log} "
-
-
-
-
-
 #if paired otherwise change headers and --paired ioption.
-rule kraken_sample:
+rule kraken:
     input:
         reads=get_quality_controlled_reads , # returns paired end or not
-        db= get_kraken_db_path
+        db= get_kraken_db_path,
+        db_files = get_kraken_db_files
     output:
         #kraken="kraken_results/{db_name}/kraken_results/{sample}.kraken",
         report= "kraken_results/{db_name}/reports/{sample}.txt"
@@ -43,14 +24,11 @@ rule kraken_sample:
     params:
         extra= config.get("kraken_run_extra",""),
         paired = '--paired' if config.get('paired_reads',True) else "" ,
-        ramdisk = "--memory-mapping" if config['use_ramdisk'] else "",
     resources:
-        mem_mb= 0,  # resources are summed together for the whole group
-        time= 5
-    group:
-        "kraken"
+        mem= calculate_kraken_memory,
+        time= config['classify_time']
     threads:
-        0 #config['kraken_threads']
+        config['kraken_threads']
     shell:
         """
             kraken2 \
@@ -60,35 +38,15 @@ rule kraken_sample:
             --output - \
             --report {output.report} \
             {params.paired} \
-            {params.ramdisk} \
             {input.reads} \
             2> >(tee {log})
         """
-
-# rule to gather all kreken on samples
-rule all_kraken:
-    input:
-        expand("kraken_results/{{db_name}}/reports/{sample}.txt",
-               sample = get_all_from_sampletable()
-               )
-    output:
-        temp(touch("finished_kraken_{db_name}"))
-    resources:
-        mem_mb= 0,  # resources are summed together for the whole group
-        time= 0
-    group:
-        "kraken"
-    threads:
-        config['kraken_threads']
-    benchmark:
-        "logs/benchmark/kraken/{db_name}.tsv"
 
 
 rule braken:
     input:
         "kraken_results/{db_name}/reports/{sample}.txt",
         db= get_kraken_db_path,
-        flag= rules.all_kraken.output #finish all kraken before starting braken
     output:
         "kraken_results/{db_name}/braken_estimation/{sample}.txt"
     params:
@@ -101,7 +59,10 @@ rule braken:
         "logs/benchmark/braken/{db_name}/{sample}.tsv"
     conda:
         "../envs/kraken.yaml"
-    threads:  1
+    threads:
+        1
+    resources:
+        time= config['classify_time']
     shell:
         "bracken "
         " -d {input.db} "

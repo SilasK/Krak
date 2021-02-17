@@ -62,7 +62,7 @@ rule build_kraken_db:
     threads:
         config['kraken_threads']
     resources:
-        mem_mb=config['kraken_mem'],
+        mem=config['build_mem'],
         time=config['build_time']
     benchmark:
         "log/benchmark/build/build_kraken_db/{db_name}.tsv"
@@ -106,7 +106,7 @@ rule build_bracken_db:
     threads:
         config['braken_threads']
     resources:
-        mem_mb=config['braken_mem'],
+        mem=config['build_mem'],
         time=config['build_time']
     conda:
         "../envs/kraken.yaml"
