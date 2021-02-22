@@ -139,3 +139,38 @@ def get_quality_controlled_reads(wildcards):
     QC_Headers=["Reads_QC_"+f for f in fractions]
 
     return get_files_from_SampleTable(wildcards.sample,QC_Headers)
+
+
+
+## BB MAp
+
+def io_params_for_tadpole(io,key='in'):
+    """This function generates the input flag needed for bbwrap/tadpole for all cases
+    possible for get_quality_controlled_reads.
+
+    params:
+        io  input or output element from snakemake
+        key 'in' or 'out'
+
+        if io contains attributes:
+            se -> in={se}
+            R1,R2,se -> in1={R1},se in2={R2}
+            R1,R2 -> in1={R1} in2={R2}
+
+    """
+    N= len(io)
+    if N==1:
+        flag = f"{key}1={io[0]}"
+    elif N==2:
+        flag= f"{key}1={io[0]} {key}2={io[1]}"
+    elif N==3:
+        flag= f"{key}1={io[0]},{io[2]} {key}2={io[1]}"
+    else:
+        logger.critical(("File input/output expectation is one of: "
+                         "1 file = single-end/ interleaved paired-end "
+                         "2 files = R1,R2, or"
+                         "3 files = R1,R2,se"
+                         "got: {n} files:\n{}").format('\n'.join(io),
+                                                       n=len(io)))
+        sys.exit(1)
+    return flag

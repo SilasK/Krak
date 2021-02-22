@@ -16,7 +16,7 @@ def get_kraken_db_path(wildcards):
 
     db_name= wildcards.db_name
     assert 'kraken_db' in config, 'Expect a directory named "kraken_db" in the config file'
-    assert db_name in config['kraken_db'], f'The name "{db_name}" is not in the config file under "krakendb"'
+    assert db_name in config['kraken_db'], f'The name "{db_name}" is not in the config file under "kraken_db"'
 
     kraken_db_folder = config['kraken_db'][db_name]
 

@@ -1,12 +1,52 @@
 include: "workflow_scripts.smk"
 include: "sample_table.smk"
 
+
+## define classify_db if not specified
+
+if config['classify_db'] == 'default':
+    available_kraken_dbs= list(config['kraken_db'].keys())
+    if len(available_kraken_dbs) ==0:
+        logger.critical("You didn't Specify any kraken db. "
+                        "Specify the name and path to a kraken_db in the config file under 'kraken_db'."
+                        )
+
+    config['classify_db'] = available_kraken_dbs[0]
+    if len(available_kraken_dbs) >1:
+        logger.info(f"Use '{config['classify_db']}' as kraken_db. "
+                    "If you want to use another one specify the name under 'classify_db' "
+                    )
+
+
 rule all:
     input:
-        "classify_{db_name}"
+        expand("kraken_results/counts_{level}_{db_name}.tsv",
+               level=config['classify_level'], db_name=config['classify_db']
+               )
 
 
-#if paired otherwise change headers and --paired ioption.
+
+checkpoint estimate_readlength:
+    input:
+        reads=get_quality_controlled_reads , # returns paired end or not
+    output:
+        "readstats/readlengths/{sample}.tsv"
+    threads:
+        1
+    conda:
+        "../envs/bbmap.yaml"
+    log:
+        "log/readlength/{sample}.log"
+    params:
+        inputs = lambda wc,input: io_params_for_tadpole(input.reads)
+    shell:
+        "readlength.sh {params.inputs} out={output[0]} "
+        " max=1000  2> {log}"
+
+
+
+
+
 rule kraken:
     input:
         reads=get_quality_controlled_reads , # returns paired end or not
@@ -16,9 +56,9 @@ rule kraken:
         #kraken="kraken_results/{db_name}/kraken_results/{sample}.kraken",
         report= "kraken_results/{db_name}/reports/{sample}.txt"
     log:
-        "logs/run/{db_name}/{sample}.log"
+        "log/kraken/{db_name}/{sample}.log"
     benchmark:
-        "logs/benchmark/kraken/{db_name}/samples/{sample}.tsv"
+        "log/benchmark/kraken/{db_name}/samples/{sample}.tsv"
     conda:
         "../envs/kraken.yaml"
     params:
@@ -43,20 +83,128 @@ rule kraken:
         """
 
 
+def get_braken_dbfile(wildcards):
+    """
+        Braken uses different databases for different readlengths.
+        The readlength is given or infered from the input reads.
+        The database with the most similar readlength is choosen.
+
+
+    """
+
+    import numpy as np
+    readlength_mode= config.get('readlength','infer_all')
+
+    if type(readlength_mode)  == int:
+
+        sample_readlength = readlength_mode
+
+    elif not (type(readlength_mode) == str \
+              and (readlength_mode=='infer_all' \
+                   or readlength_mode=='infer_one'
+                   )
+              ) :
+
+        raise Exception(f"Didn't understand 'readlength' in config file. "
+                        "Specify an number, 'infer_one' or 'infer_all' \n"
+                        "got: {readlength_mode}"
+                        )
+    else: # Infer readlength
+
+        if readlength_mode == 'infer_one':
+            # take first smple
+            sample_for_inference = get_all_from_sampletable()[0]
+        elif readlength_mode == 'infer_all':
+            sample_for_inference = wildcards.sample
+
+
+
+        # get read length file either from atlas otherwise generate it by calling checkpoint
+        atlas_readlength_file= "{sample}/sequence_quality_control/read_stats/QC_read_length_hist.txt".format(sample = sample_for_inference)
+
+        if os.path.exists(atlas_readlength_file):
+            read_length_file = atlas_readlength_file
+        else:
+            # checkpoint
+            read_length_file = checkpoints.estimate_readlength.get( sample=sample_for_inference
+                                                                   ).output[0]
+
+
+
+        # parse file and get median read_length
+        from utils.parsers_bbmap import parse_comments
+        sample_readlength = parse_comments(read_length_file)['Median']
+        sample_readlength = int(sample_readlength)
+
+
+    # see what brakendb are available
+    kraken_db_path = get_kraken_db_path(wildcards)
+    brakendb_path_template = f"{kraken_db_path}/database{{readlength}}mers.kraken"
+    avalable_braken_sets = glob_wildcards(brakendb_path_template).readlength
+    if len(avalable_braken_sets)==0:
+        raise Exception("Don't find braken dbs searched for: \n"
+                        f"{kraken_db_path}/database*mers.kraken"
+                        )
+
+
+    # calculate closest braken file
+    avalable_braken_sets = np.array(avalable_braken_sets,dtype=int)
+    diff =  np.abs(avalable_braken_sets -sample_readlength)
+    optimal_readlength =  avalable_braken_sets[np.argmin(diff)]
+
+    # Warn if not optimal choice
+    if min(diff) > 30:
+        raise Exception(f"Dont't find a braken db that matches well to readlength of sample {wildcards.sample}\n"
+                    f"db_path: {kraken_db_path} \n"
+                    f"Available dbs for readlength: {avalable_braken_sets}\n"
+                    f"readlength of sample {wildcards.sample}: {sample_readlength}\n"
+                    )
+
+
+    # format braken db file
+    braken_db = brakendb_path_template.format(
+        readlength=optimal_readlength
+        )
+
+    return braken_db
+
+def parse_readlenth_from_braken_dbfile(wildcards, input):
+    """
+        parse readlength from database{readlength}mers.kraken
+    """
+
+    braken_db_file = os.path.basename(input.braken_db)
+
+    read_length = braken_db_file.replace('database','').replace('mers.kraken','')
+    return read_length
+
+
+
+braken_level_mapping = {
+    'species' : 'S',
+    'genus' :   'G',
+    'subsp': 'S1',
+    'family': 'F',
+}
+
+wildcard_constraints:
+    level="(family|genus|species|subsp)"
+
 rule braken:
     input:
         "kraken_results/{db_name}/reports/{sample}.txt",
         db= get_kraken_db_path,
+        braken_db = get_braken_dbfile
     output:
-        "kraken_results/{db_name}/braken_estimation/{sample}.txt"
+        "kraken_results/{db_name}/braken_estimation/{level}/{sample}.txt"
     params:
-        readlength=50,
-        level= 'S1',
+        readlength= parse_readlenth_from_braken_dbfile,
+        level = lambda wildcards: braken_level_mapping[wildcards.level],
         threshold =0 # number of reads required PRIOR to abundance estimation to perform reestimation (default: 0)
     log:
-        "logs/braken/{db_name}/{sample}.log"
+        "log/braken/{db_name}/{sample}_{level}.log"
     benchmark:
-        "logs/benchmark/braken/{db_name}/{sample}.tsv"
+        "log/benchmark/braken/{db_name}/{sample}_{level}.tsv"
     conda:
         "../envs/kraken.yaml"
     threads:
@@ -72,16 +220,24 @@ rule braken:
         " -r {params.readlength} "
         " -l {params.level} "
         " -t {params.threshold} "
-        " 2> >(tee {log}) "
+        " &> >(tee {log}) "
 
 
+
+
+
+localrules: combine_braken
 rule combine_braken:
     input:
-        expand("kraken_results/{{db_name}}/braken_estimation/{sample}.txt",
+        expand("kraken_results/{{db_name}}/braken_estimation/{{level}}/{sample}.txt",
                sample = get_all_from_sampletable()
                )
     output:
-        touch("classify_{db_name}")
+        "kraken_results/counts_{level}_{db_name}.tsv"
+    log:
+        "log/braken/{db_name}/combine_braken_{level}.txt"
+    script:
+        "../scripts/combine_braken_reports.py"
 
 # Usage: bracken -d MY_DB -i INPUT -o OUTPUT -w OUTREPORT -r READ_LEN -l LEVEL -t THRESHOLD
 #   MY_DB          location of Kraken database

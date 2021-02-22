@@ -1,10 +1,14 @@
 
 build_mem : 100000
-build_time: 30
+build_time: 300
 
 kraken_threads : 8
 classify_time: 15 # krakjen is quite fast
 braken_threads: 10
+
+# store one or several name : path
+kraken_db:
+  kraken_db : kraken_db
 
 
 ### Build
@@ -16,12 +20,16 @@ genome_folder: /home/kiesers/s/HumanUnifiedCatalog/gff/fasta
 
 #### Mpping
 
+classify_db: 'default'  # If 'default' take first from 'kraken_db' pats above
+
+classify_level:
+  - species
+  - genus
+  - family
 
 sample_table: "samples.tsv"
+## braken needs to know readlength approximatively utually databases for 50,100, and 150 are available
+readlength: "infer_one"  # int , 'infer_one' if readlength is expected to be the same for all samples or 'infer_all'
 
-use_ramdisk: true  # copies kraken db to /dev/shm once, and runs all samples
 
-# store one or several name : path
-kraken_db:
-  kraken_db : kraken_db
 kraken_run_extra: "--gzip-compressed "

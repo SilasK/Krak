@@ -11,7 +11,7 @@ rule build:
                file= kraken_db_files),
         expand("{db_name}/database{readlength}mers.kraken",
                  db_name= config['build_db_name'],
-                 readlength=[50,100,150]
+                 readlength=[50,100,150,200,250]
                  )
 
 
@@ -53,7 +53,7 @@ rule build_kraken_db:
         genome_folder = config['genome_folder']
     output:
         krakendb=expand("{{db_name}}/{file}", file=kraken_db_files),
-        seqid2taxid= "{db_name}/seqid2taxid.map.gz"
+        seqid2taxid= "{db_name}/seqid2taxid.map.gz",
     params:
         taxonomy= lambda wc,input: os.path.dirname(input.db),
         kraken_path= lambda wc: os.path.abspath(wc.db_name)
