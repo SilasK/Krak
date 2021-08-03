@@ -14,14 +14,15 @@ For installation details, see the [instructions in the Snakemake documentation](
 
 2. generate a sample table from your fastq files:
 
-    scripts/generate_sample_table.py path/to/fastqs
+        scripts/generate_sample_table.py path/to/fastqs
 
 
 Check the generated samples.tsv and simplify names, if you wish.
 
 3. Run the Pipeline.
 
-  a. First make a dryrun
+a. First make a dryrun
+
       snakemake  -s Kraken/workflow/classify.smk --use-conda --dryrun
 
 
@@ -34,6 +35,14 @@ Check the generated samples.tsv and simplify names, if you wish.
 
 
 
+## Use databases for human and mouse gut
+
+Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
+
+    wget https://ezmeta.unige.ch/CMGM/v1/UHGG_v1_kraken2_db.tar.gz
+    tar -xzf UHGG_v1_kraken2_db.tar.gz -C Kraken_dbs/UHGG --strip-components 1
+
+Set the path to the downloaded kreken db in the `Kraken/confiog.yaml`.
 
 
 
