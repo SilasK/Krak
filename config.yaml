@@ -11,8 +11,8 @@ braken_threads: 10
 ### store one or several name : path
 # 'human' and 'mouse' can automatically be downloaded
 kraken_db:
-  human : "kraken_db/UHGG"
-  mouse : "kraken_db/CMGM"
+  db_name : "path/kreken_db"
+
 
 #### Mapping
 
