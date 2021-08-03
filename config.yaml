@@ -1,31 +1,26 @@
 
+### Resources MB, min
+
 build_mem : 100000
 build_time: 300
 
 kraken_threads : 8
-classify_time: 15 # krakjen is quite fast
+classify_time: 15 # kraken is quite fast
 braken_threads: 10
 
-# store one or several name : path
+### store one or several name : path
+# 'human' and 'mouse' can automatically be downloaded
 kraken_db:
-  kraken_db : kraken_db
+  human : "kraken_db/UHGG"
+  mouse : "kraken_db/CMGM"
 
-
-### Build
-build_db_name : "kraken_db"
-taxonomy: "green_genes_taxonomy.tsv"
-genome_folder: /home/kiesers/s/HumanUnifiedCatalog/gff/fasta
-
-
-
-#### Mpping
+#### Mapping
 
 classify_db: 'default'  # If 'default' take first from 'kraken_db' pats above
 
 classify_level:
   - species
-  - genus
-#  - family
+#  - genus
 
 sample_table: "samples.tsv"
 ## braken needs to know readlength approximatively utually databases for 50,100, and 150 are available
@@ -33,3 +28,10 @@ readlength: "infer_one"  # int , 'infer_one' if readlength is expected to be the
 
 
 kraken_run_extra: "--gzip-compressed "
+
+
+
+### Build
+build_db_name : "kraken_db"
+taxonomy: "green_genes_taxonomy.tsv"
+genome_folder: /home/kiesers/s/HumanUnifiedCatalog/gff/fasta

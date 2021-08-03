@@ -25,9 +25,10 @@ def get_sample_table_file():
     sample_table_file = config.get('sample_table','samples.tsv')
 
     if not os.path.exists(sample_table_file):
-        raise IOError(f'Sample Table "{sample_table_file}" does not exists.'
-                      ' Specify a correct path in the config files under'
-                      ' "sample_table".' )
+        raise IOError(f"Sample Table '{sample_table_file}'' does not exists."
+                      "generate one with the script 'scripts/generate_sample_table.py' "
+                      " and specify a correct path in the config files under"
+                      " 'sample_table'." )
 
     return sample_table_file
 

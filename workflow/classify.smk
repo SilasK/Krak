@@ -1,6 +1,6 @@
 include: "workflow_scripts.smk"
 include: "sample_table.smk"
-
+include: "download.smk"
 
 ## define classify_db if not specified
 
