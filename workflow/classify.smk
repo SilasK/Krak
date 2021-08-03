@@ -139,11 +139,11 @@ def get_braken_dbfile(wildcards):
 
     # see what brakendb are available
     kraken_db_path = get_kraken_db_path(wildcards)
-    brakendb_path_template = f"{kraken_db_path}/database{{readlength}}mers.kraken"
+    brakendb_path_template = f"{kraken_db_path}/database{{readlength}}mers.kmer_distrib"
     avalable_braken_sets = glob_wildcards(brakendb_path_template).readlength
     if len(avalable_braken_sets)==0:
         raise Exception("Don't find braken dbs searched for: \n"
-                        f"{kraken_db_path}/database*mers.kraken"
+                        f"{kraken_db_path}/database*mers.kmer_distrib"
                         )
 
 
@@ -175,7 +175,7 @@ def parse_readlenth_from_braken_dbfile(wildcards, input):
 
     braken_db_file = os.path.basename(input.braken_db)
 
-    read_length = braken_db_file.replace('database','').replace('mers.kraken','')
+    read_length = braken_db_file.replace('database','').replace('mers.kmer_distrib','')
     return read_length
 
 
@@ -229,15 +229,27 @@ rule braken:
 localrules: combine_braken
 rule combine_braken:
     input:
-        expand("kraken_results/{{db_name}}/braken_estimation/{{level}}/{sample}.txt",
+        braken= expand("kraken_results/{{db_name}}/braken_estimation/{{level}}/{sample}.txt",
+               sample = get_all_from_sampletable()
+               ),
+        kraken= expand("kraken_results/{{db_name}}/reports/{sample}.txt",
                sample = get_all_from_sampletable()
                )
+    threads:
+        1
+    params:
+        mapping_table = "kraken_results/Mapping_rate.tsv"
     output:
         "kraken_results/counts_{level}_{db_name}.tsv"
     log:
         "log/braken/{db_name}/combine_braken_{level}.txt"
     script:
         "../scripts/combine_braken_reports.py"
+
+
+
+
+
 
 # Usage: bracken -d MY_DB -i INPUT -o OUTPUT -w OUTREPORT -r READ_LEN -l LEVEL -t THRESHOLD
 #   MY_DB          location of Kraken database

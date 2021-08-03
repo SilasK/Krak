@@ -121,7 +121,7 @@ def get_files_from_SampleTable(sample,Headers):
     if files.isnull().any():
         raise SampleTableError("Some files are empty in SampleTable.\n"
                                f"Sample: {sample}\n"
-                               f"Header: {Header}\n"
+                               f"Header: {Headers}\n"
                                f"Files: {list(files)}"
                                )
 

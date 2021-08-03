@@ -11,7 +11,7 @@ rule build:
                file= kraken_db_files),
         expand("{db_name}/database{readlength}mers.kraken",
                  db_name= config['build_db_name'],
-                 readlength=[50,100,150,200,250]
+                 readlength=[50,75,100,150,200,250]
                  )
 
 
@@ -52,8 +52,10 @@ rule build_kraken_db:
         names= "{db_name}/flextaxd/names.dmp",
         genome_folder = config['genome_folder']
     output:
+        "{db_name}/seqid2taxid.map.gz",
+        directory("{db_name}/library"),
+        directory("{db_name}/taxonomy"),
         krakendb=expand("{{db_name}}/{file}", file=kraken_db_files),
-        seqid2taxid= "{db_name}/seqid2taxid.map.gz",
     params:
         taxonomy= lambda wc,input: os.path.dirname(input.db),
         kraken_path= lambda wc: os.path.abspath(wc.db_name)
@@ -99,14 +101,18 @@ wildcard_constraints:
 rule build_bracken_db:
     input:
         rules.build_kraken_db.output.krakendb,
-        "{db_name}/seqid2taxid.map"
+        "{db_name}/seqid2taxid.map",
+        "{db_name}/library",
+        "{db_name}/taxonomy"
     output:
-        "{db_name}/database{readlength}mers.kraken",
+        temp("{db_name}/database{readlength}mers.kraken"),
         "{db_name}/database{readlength}mers.kmer_distrib"
     threads:
         config['braken_threads']
+    shadow:
+        "minimal"
     resources:
-        mem=config['build_mem'],
+        #mem=config['build_mem'],
         time=config['build_time']
     conda:
         "../envs/kraken.yaml"

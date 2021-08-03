@@ -25,7 +25,7 @@ classify_db: 'default'  # If 'default' take first from 'kraken_db' pats above
 classify_level:
   - species
   - genus
-  - family
+#  - family
 
 sample_table: "samples.tsv"
 ## braken needs to know readlength approximatively utually databases for 50,100, and 150 are available
