@@ -64,8 +64,8 @@ rule kraken:
         extra= config.get("kraken_run_extra",""),
         paired = '--paired' if config.get('paired_reads',True) else "" ,
     resources:
-        mem= calculate_kraken_memory,
-        time= config['classify_time']
+        mem_mb= calculate_kraken_memory,
+        time_min= config['classify_time']
     threads:
         config['kraken_threads']
     shell:

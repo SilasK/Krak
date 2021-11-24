@@ -64,8 +64,8 @@ rule build_kraken_db:
     threads:
         config['kraken_threads']
     resources:
-        mem=config['build_mem'],
-        time=config['build_time']
+        mem_mb=config['build_mem']*1000,
+        time_min=config['build_time']
     benchmark:
         "log/benchmark/build/build_kraken_db/{db_name}.tsv"
     log:
@@ -79,7 +79,7 @@ rule build_kraken_db:
         " --genomes_path {input.genome_folder} "
         "-p {threads} "
         " --create_db --dbprogram kraken2 "
-        "--log log/kraken --verbose --debug &> {log}"
+        "--log log/build/ --verbose --debug &> {log}"
 
 
 #bracken https://ccb.jhu.edu/software/bracken/index.shtml?t=manual
@@ -112,8 +112,8 @@ rule build_bracken_db:
     shadow:
         "minimal"
     resources:
-        #mem=config['build_mem'],
-        time=config['build_time']
+        #mem_mb=config['build_mem']*1000,
+        time_min=config['build_time']
     conda:
         "../envs/kraken.yaml"
     log:

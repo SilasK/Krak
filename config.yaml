@@ -1,11 +1,11 @@
 
-### Resources MB, min
+### Resources GB, min
 
-build_mem : 100000
+build_mem : 100
 build_time: 300
 
 kraken_threads : 8
-classify_time: 15 # kraken is quite fast
+classify_time: 15 # kraken is quite fast [min]
 braken_threads: 10
 
 ### store one or several name : path
