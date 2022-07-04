@@ -55,8 +55,10 @@ You need flextaxd to build Kraken dbs. There is an error in the latest version h
     
     
  What you need to build a kraken db is:
-  - all genomes in folder
+  - path to the top-level-folder with all genomes
   - a greeen genes formated taxonomy file
+
+Genomes not in the taxonaomy are ignored. 
   
 Modify the name of your database as well as the path for building in the `config.file` 
 
