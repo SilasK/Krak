@@ -16,6 +16,8 @@ kraken_db:
 
 #### Mapping
 
+paired_reads: true
+
 classify_db: 'default'  # If 'default' take first from 'kraken_db' pats above
 
 classify_level:
