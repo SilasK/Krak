@@ -1,4 +1,6 @@
-# Snakemake pipline for Kraken2 + Braken.
+# Simple snakemake pipline for Kraken2 + Braken.
+
+Running kraken+ braken can be a bit combersome. Here is *Krak* a simple plpeline that let's you run these tools in a simple and efficient way. 
 
 ## Classify using existing kraken2 + braken dbs
 
@@ -64,12 +66,12 @@ Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
 Set the path to the downloaded kraken db in the `Kraken/config.yaml`.
 
 
-# Analyze the microbiome based on taxonomy and Kegg modules
+## Analyze the microbiome based on taxonomy and Kegg modules
 
 Once you have the Kraken2 quantification you can use this [jupyter notebook](https://colab.research.google.com/github/trajkovski-lab/CMMG/blob/main/notebooks/Analyze-cold-adapted-microbiota.ipynb) that shows how CMMG can be used for the functional and taxonomic analysis of mouse metagenome data.
 
 
-# Create custom kraken + braken dbs
+## Create custom kraken + braken dbs
 Custom kraken db's can be generated using flexitaxd.
 
 You need flextaxd to build Kraken dbs. There is an error in the latest version https://github.com/FOI-Bioinformatics/flextaxd/issues/48, therfore run
