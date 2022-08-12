@@ -46,7 +46,7 @@ Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
     db="uhgg" # for human "cmmg" for mouse"
     mkdir -p databases/$db
     
-    for file in "database100mers.kmer_distrib
+    for file in database100mers.kmer_distrib
                 database150mers.kmer_distrib
                 database200mers.kmer_distrib
                 database250mers.kmer_distrib
@@ -56,7 +56,7 @@ Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
                 inspect.txt.gz
                 opts.k2d
                 seqid2taxid.map.gz
-                taxo.k2d" ; 
+                taxo.k2d ; 
     do 
         wget https://ezmeta.unige.ch/CMMG/Kraken2db/$db/$file -O databases/$db/$file
     done
