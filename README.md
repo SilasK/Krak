@@ -41,22 +41,12 @@ a. First make a dryrun
 
 ## Use databases for human and mouse gut
 
-Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
+Download the Kraken db for human and put them in `databases`:
 
     db="uhgg" # for human "cmmg" for mouse"
     mkdir -p databases/$db
     
-    for file in database100mers.kmer_distrib
-                database150mers.kmer_distrib
-                database200mers.kmer_distrib
-                database250mers.kmer_distrib
-                database50mers.kmer_distrib
-                database75mers.kmer_distrib
-                hash.k2d
-                inspect.txt.gz
-                opts.k2d
-                seqid2taxid.map.gz
-                taxo.k2d ; 
+    for file in  database100mers.kmer_distrib database150mers.kmer_distrib database200mers.kmer_distrib database250mers.kmer_distrib database50mers.kmer_distrib database75mers.kmer_distrib hash.k2d inspect.txt.gz opts.k2d seqid2taxid.map.gz taxo.k2d ; 
     do 
         wget https://ezmeta.unige.ch/CMMG/Kraken2db/$db/$file -O databases/$db/$file
     done
