@@ -41,8 +41,8 @@ a. First make a dryrun
 
 Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
 
-    db="Kraken_dbs/UHGG"
-    mkdir $db
+    db="uhgg" # for human "cmmg" for mouse"
+    mkdir -p databases/$db
     
     for file in "database100mers.kmer_distrib
                 database150mers.kmer_distrib
@@ -56,7 +56,7 @@ Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
                 seqid2taxid.map.gz
                 taxo.k2d" ; 
     do 
-        wget https://ezmeta.unige.ch/CMMG/Kraken2db/uhgg/$file -O $db/$file
+        wget https://ezmeta.unige.ch/CMMG/Kraken2db/$db/$file -O databases/$db/$file
     done
 
     
@@ -64,8 +64,12 @@ Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
 Set the path to the downloaded kraken db in the `Kraken/config.yaml`.
 
 
+# Analyze the microbiome based on taxonomy and Kegg modules
 
-## Create custom kraken + braken dbs
+Once you have the Kraken2 quantification you can use this [jupyter notebook](https://colab.research.google.com/github/trajkovski-lab/CMMG/blob/main/notebooks/Analyze-cold-adapted-microbiota.ipynb) that shows how CMMG can be used for the functional and taxonomic analysis of mouse metagenome data.
+
+
+# Create custom kraken + braken dbs
 Custom kraken db's can be generated using flexitaxd.
 
 You need flextaxd to build Kraken dbs. There is an error in the latest version https://github.com/FOI-Bioinformatics/flextaxd/issues/48, therfore run
