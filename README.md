@@ -26,12 +26,12 @@ a. First make a dryrun
       snakemake  -s Kraken/workflow/classify.smk --use-conda --dryrun
 
 
-  If you have access to cluster or cloud we recommend you to setup cluster/cloud integration via a profile.
+  If you have access to cluster or cloud we recommend you to setup cluster/cloud integration via [our profile](https://github.com/Snakemake-Profiles/generic). 
   See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details.
 
   b. Run the Pipeline:
 
-    snakemake  -s Kraken/workflow/classify.smk --use-conda --dryrun
+    snakemake  -s Kraken/workflow/classify.smk --use-conda 
 
 
 
@@ -39,10 +39,27 @@ a. First make a dryrun
 
 Download the Kraken db for human and put them in `Kraken_dbs/UHGG`:
 
-    wget https://ezmeta.unige.ch/CMGM/v1/UHGG_v1_kraken2_db.tar.gz
-    tar -xzf UHGG_v1_kraken2_db.tar.gz -C Kraken_dbs/UHGG --strip-components 1
+    db="Kraken_dbs/UHGG"
+    mkdir $db
+    
+    for file in "database100mers.kmer_distrib
+                database150mers.kmer_distrib
+                database200mers.kmer_distrib
+                database250mers.kmer_distrib
+                database50mers.kmer_distrib
+                database75mers.kmer_distrib
+                hash.k2d
+                inspect.txt.gz
+                opts.k2d
+                seqid2taxid.map.gz
+                taxo.k2d" ; 
+    do 
+        wget https://ezmeta.unige.ch/CMMG/Kraken2db/uhgg/$file -O $db/$file
+    done
 
-Set the path to the downloaded kreken db in the `Kraken/config.yaml`.
+    
+
+Set the path to the downloaded kraken db in the `Kraken/config.yaml`.
 
 
 
