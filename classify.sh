@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+snakefile="$SCRIPT_DIR/workflow/classify.smk"
 
-snakemake  -s /home/kiesers/Kraken/workflow/classify.smk \
---use-conda --conda-prefix /home/kiesers/scratch/Atlas/databases/conda_envs/ \
+snakemake  -s "$snakefile" \
+--use-conda \
 -j30 --profile cluster --scheduler greedy $@
 #
