@@ -11,7 +11,8 @@ braken_threads: 10
 ### store one or several name : path
 # 'human' and 'mouse' can automatically be downloaded
 kraken_db:
-  db_name : "path/kreken_db"
+  #db_name : "path/kreken_db"
+  refseq2024 : "/storage/workspaces/ifik_miclab/ifik_miclab1/Databases/kraken_database_2024"
 
 
 #### Mapping
